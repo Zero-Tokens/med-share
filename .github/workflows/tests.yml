@@ -13,6 +13,26 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    # O .env.example aponta para o host `postgres` do compose.yaml; aqui o
+    # banco é um serviço do job, exposto em 127.0.0.1.
+    env:
+      DB_HOST: 127.0.0.1
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: med_share
+          POSTGRES_USER: med_share
+          POSTGRES_PASSWORD: med_share
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U med_share -d med_share"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -23,6 +43,7 @@ jobs:
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.3'
+          extensions: pdo_pgsql, pdo_sqlite
           tools: composer:v2
           coverage: none
 
