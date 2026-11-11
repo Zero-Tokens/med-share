@@ -1,0 +1,596 @@
+/*
+ * Animações e interações da landing page (resources/js/pages/welcome.tsx).
+ * Portadas do modelo de design "med-share · Landing page". Tudo prefixado
+ * com `lp-` para não colidir com o resto do app.
+ *
+ * A cena da estrada e a trilha de etapas abaixo dela compartilham o mesmo
+ * ciclo de 16s: as porcentagens são fases da mesma viagem (carregar →
+ * andar → descarregar → recebido). Mudar a duração de uma exige mudar todas.
+ */
+
+.lp {
+    scroll-behavior: smooth;
+}
+
+.lp-btn-dark {
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background-color 0.18s ease;
+}
+.lp-btn-dark:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgb(13 21 18 / 0.22);
+}
+.lp-btn-dark .lp-arr {
+    transition: transform 0.18s ease;
+}
+.lp-btn-dark:hover .lp-arr {
+    transform: translateX(4px);
+}
+.lp-btn-light {
+    transition:
+        border-color 0.18s ease,
+        background-color 0.18s ease;
+}
+.lp-btn-light:hover {
+    border-color: #047857;
+    background-color: #f1f9f5;
+}
+.lp-navlink:hover {
+    color: #0d1512;
+}
+.lp-card {
+    transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        border-color 0.22s ease;
+}
+.lp-card:hover {
+    transform: translateY(-4px);
+    border-color: #a9dcc6;
+    box-shadow: 0 18px 40px rgb(4 120 87 / 0.1);
+}
+.lp-ico {
+    transition: transform 0.22s ease;
+}
+.lp-card:hover .lp-ico {
+    transform: scale(1.08) rotate(-4deg);
+}
+
+/* entrada do herói */
+@keyframes lp-hero-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.lp-in1 {
+    animation: lp-hero-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.lp-in2 {
+    animation: lp-hero-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s both;
+}
+.lp-in3 {
+    animation: lp-hero-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+.lp-in4 {
+    animation: lp-hero-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s both;
+}
+.lp-in5 {
+    animation: lp-hero-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.45s both;
+}
+
+/* revelar ao rolar (só onde o navegador suporta scroll-driven animations) */
+@keyframes lp-rise {
+    from {
+        opacity: 0;
+        transform: translateY(36px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@supports (animation-timeline: view()) {
+    .lp-rv {
+        animation: lp-rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 70%;
+    }
+}
+
+@keyframes lp-pulse-dot {
+    0% {
+        box-shadow: 0 0 0 0 rgb(5 150 105 / 0.45);
+    }
+    100% {
+        box-shadow: 0 0 0 10px rgb(5 150 105 / 0);
+    }
+}
+.lp-pulse {
+    animation: lp-pulse-dot 1.8s ease-out infinite;
+}
+
+/* cena da estrada: ciclo de 16s */
+.lp-van {
+    --lp-van-w: clamp(96px, 11vw, 150px);
+    width: var(--lp-van-w);
+    margin-left: calc(var(--lp-van-w) / -2);
+    animation: lp-van-move 16s linear infinite;
+}
+@keyframes lp-van-move {
+    0% {
+        left: 20%;
+        opacity: 0;
+    }
+    3% {
+        left: 20%;
+        opacity: 1;
+    }
+    18% {
+        left: 20%;
+        opacity: 1;
+        animation-timing-function: cubic-bezier(0.45, 0, 0.3, 1);
+    }
+    68% {
+        left: 80%;
+        opacity: 1;
+    }
+    90% {
+        left: 80%;
+        opacity: 1;
+    }
+    95% {
+        left: 80%;
+        opacity: 0;
+    }
+    100% {
+        left: 80%;
+        opacity: 0;
+    }
+}
+@keyframes lp-van-bob {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-1.5px);
+    }
+}
+.lp-bob {
+    animation: lp-van-bob 0.28s ease-in-out infinite alternate;
+}
+@keyframes lp-wheel-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    18% {
+        transform: rotate(0deg);
+        animation-timing-function: cubic-bezier(0.45, 0, 0.3, 1);
+    }
+    68% {
+        transform: rotate(2160deg);
+    }
+    100% {
+        transform: rotate(2160deg);
+    }
+}
+.lp-wh {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: lp-wheel-spin 16s linear infinite;
+}
+@keyframes lp-speed-lines {
+    0%,
+    22% {
+        opacity: 0;
+    }
+    28%,
+    56% {
+        opacity: 1;
+    }
+    64%,
+    100% {
+        opacity: 0;
+    }
+}
+.lp-speed {
+    opacity: 0;
+    animation: lp-speed-lines 16s linear infinite;
+}
+@keyframes lp-box-load {
+    0%,
+    4% {
+        left: 11%;
+        opacity: 0;
+    }
+    6% {
+        left: 11%;
+        opacity: 1;
+    }
+    13% {
+        left: 19%;
+        opacity: 1;
+    }
+    15%,
+    100% {
+        left: 19%;
+        opacity: 0;
+    }
+}
+.lp-box-a {
+    opacity: 0;
+    animation: lp-box-load 16s ease-in-out infinite;
+}
+@keyframes lp-box-unload {
+    0%,
+    70% {
+        left: 81%;
+        opacity: 0;
+    }
+    72% {
+        left: 81%;
+        opacity: 1;
+    }
+    79% {
+        left: 89%;
+        opacity: 1;
+    }
+    81%,
+    100% {
+        left: 89%;
+        opacity: 0;
+    }
+}
+.lp-box-b {
+    opacity: 0;
+    animation: lp-box-unload 16s ease-in-out infinite;
+}
+@keyframes lp-pill-falta {
+    0%,
+    79% {
+        opacity: 1;
+    }
+    81%,
+    96% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+.lp-pill-falta {
+    animation: lp-pill-falta 16s linear infinite;
+}
+@keyframes lp-pill-ok {
+    0%,
+    80% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    83% {
+        opacity: 1;
+        transform: scale(1.06);
+    }
+    85%,
+    95% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    98%,
+    100% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+.lp-pill-ok {
+    opacity: 0;
+    animation: lp-pill-ok 16s linear infinite;
+}
+@keyframes lp-cloud {
+    from {
+        transform: translateX(-30%);
+    }
+    to {
+        transform: translateX(30%);
+    }
+}
+.lp-cloud {
+    animation: lp-cloud 26s ease-in-out infinite alternate;
+}
+.lp-cloud--slow {
+    animation-duration: 34s;
+}
+
+/* trilha de etapas sincronizada com a viagem */
+@keyframes lp-track-fill {
+    0%,
+    2% {
+        width: 0%;
+    }
+    8%,
+    18% {
+        width: 33.33%;
+    }
+    20% {
+        width: 66.66%;
+    }
+    70%,
+    95% {
+        width: 100%;
+    }
+    98%,
+    100% {
+        width: 0%;
+    }
+}
+.lp-track-fill {
+    animation: lp-track-fill 16s linear infinite;
+}
+@keyframes lp-st1 {
+    0%,
+    1% {
+        color: #6b7671;
+    }
+    3%,
+    95% {
+        color: #047857;
+    }
+    98%,
+    100% {
+        color: #6b7671;
+    }
+}
+@keyframes lp-st2 {
+    0%,
+    7% {
+        color: #6b7671;
+    }
+    9%,
+    95% {
+        color: #047857;
+    }
+    98%,
+    100% {
+        color: #6b7671;
+    }
+}
+@keyframes lp-st3 {
+    0%,
+    18% {
+        color: #6b7671;
+    }
+    20%,
+    95% {
+        color: #047857;
+    }
+    98%,
+    100% {
+        color: #6b7671;
+    }
+}
+@keyframes lp-st4 {
+    0%,
+    69% {
+        color: #6b7671;
+    }
+    71%,
+    95% {
+        color: #047857;
+    }
+    98%,
+    100% {
+        color: #6b7671;
+    }
+}
+.lp-st1 {
+    animation: lp-st1 16s linear infinite;
+}
+.lp-st2 {
+    animation: lp-st2 16s linear infinite;
+}
+.lp-st3 {
+    animation: lp-st3 16s linear infinite;
+}
+.lp-st4 {
+    animation: lp-st4 16s linear infinite;
+}
+
+/* passo 1: formulário se preenchendo */
+@keyframes lp-field-fill {
+    0% {
+        clip-path: inset(0 100% 0 0);
+    }
+    10%,
+    62% {
+        clip-path: inset(0 0 0 0);
+    }
+    66%,
+    100% {
+        clip-path: inset(0 100% 0 0);
+    }
+}
+.lp-ff1 {
+    animation: lp-field-fill 9s ease-out infinite backwards;
+}
+.lp-ff2 {
+    animation: lp-field-fill 9s ease-out 1.1s infinite backwards;
+}
+.lp-ff3 {
+    animation: lp-field-fill 9s ease-out 2.2s infinite backwards;
+}
+@keyframes lp-badge-in {
+    0%,
+    48% {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    54%,
+    90% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    95%,
+    100% {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+.lp-badge-in {
+    animation: lp-badge-in 9s ease-out infinite;
+}
+
+/* passo 2: busca que amplia a área */
+@keyframes lp-ping {
+    0% {
+        transform: translate(-50%, -50%) scale(0.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0;
+    }
+}
+.lp-ping {
+    animation: lp-ping 3s ease-out infinite;
+}
+@keyframes lp-rg1 {
+    0%,
+    6% {
+        opacity: 0.22;
+    }
+    10%,
+    94% {
+        opacity: 1;
+    }
+    98%,
+    100% {
+        opacity: 0.22;
+    }
+}
+@keyframes lp-rg2 {
+    0%,
+    36% {
+        opacity: 0.22;
+    }
+    40%,
+    94% {
+        opacity: 1;
+    }
+    98%,
+    100% {
+        opacity: 0.22;
+    }
+}
+@keyframes lp-rg3 {
+    0%,
+    66% {
+        opacity: 0.22;
+    }
+    70%,
+    94% {
+        opacity: 1;
+    }
+    98%,
+    100% {
+        opacity: 0.22;
+    }
+}
+.lp-rg1 {
+    animation: lp-rg1 9s linear infinite;
+}
+.lp-rg2 {
+    animation: lp-rg2 9s linear infinite;
+}
+.lp-rg3 {
+    animation: lp-rg3 9s linear infinite;
+}
+
+/* passo 3: reserva ocupando parte do liberado */
+@keyframes lp-reserve {
+    0% {
+        width: 0%;
+    }
+    15% {
+        width: 0%;
+        animation-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1);
+    }
+    35%,
+    90% {
+        width: 40%;
+    }
+    97%,
+    100% {
+        width: 0%;
+    }
+}
+.lp-reserve {
+    animation: lp-reserve 7s linear infinite;
+}
+
+/* passo 4: checklist se completando */
+@keyframes lp-checklist {
+    0%,
+    6% {
+        clip-path: inset(0 0 100% 0);
+    }
+    10%,
+    22% {
+        clip-path: inset(0 0 80% 0);
+    }
+    26%,
+    38% {
+        clip-path: inset(0 0 60% 0);
+    }
+    42%,
+    54% {
+        clip-path: inset(0 0 40% 0);
+    }
+    58%,
+    70% {
+        clip-path: inset(0 0 20% 0);
+    }
+    74%,
+    95% {
+        clip-path: inset(0 0 0 0);
+    }
+    100% {
+        clip-path: inset(0 0 100% 0);
+    }
+}
+.lp-checklist {
+    animation: lp-checklist 10s linear infinite;
+}
+
+@keyframes lp-dash-move {
+    from {
+        background-position: 0 0;
+    }
+    to {
+        background-position: -112px 0;
+    }
+}
+.lp-dash-move {
+    animation: lp-dash-move 2.4s linear infinite;
+}
+
+/* Menos movimento: tudo parado, no estado final legível. */
+@media (prefers-reduced-motion: reduce) {
+    .lp,
+    .lp * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto;
+    }
+    .lp .lp-speed,
+    .lp .lp-box-a,
+    .lp .lp-box-b,
+    .lp .lp-pill-ok {
+        opacity: 0;
+    }
+}
