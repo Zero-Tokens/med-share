@@ -1,0 +1,3 @@
+# O build da imagem só precisa de docker/; o código entra por volume.
+*
+!docker/

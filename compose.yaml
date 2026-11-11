@@ -1,0 +1,88 @@
+# Ambiente de desenvolvimento do med-share, todo em containers.
+# Só o Docker precisa estar instalado na máquina.
+#
+#   docker compose up -d --build   # primeira vez (ou depois de mudar docker/)
+#   docker compose up -d           # dia a dia
+#   docker compose logs -f app     # logs de um serviço (app, vite, queue, postgres)
+#   docker compose exec app bash   # terminal dentro do projeto
+#   docker compose down            # para tudo (os dados do banco ficam no volume)
+#   docker compose down -v         # para tudo e apaga o banco
+#
+# Aplicação: http://localhost:8000 · Vite (hot reload): http://localhost:5173
+# Portas trocáveis com APP_PORT e VITE_PORT, ex.: VITE_PORT=5174 docker compose up -d
+
+x-app: &app
+    build:
+        context: .
+        dockerfile: docker/app/Dockerfile
+        args:
+            UID: ${UID:-1000}
+            GID: ${GID:-1000}
+    image: med-share-app:dev
+    volumes:
+        - .:/var/www/html
+    restart: unless-stopped
+
+services:
+    app:
+        <<: *app
+        container_name: med-share-app
+        environment:
+            CONTAINER_ROLE: app
+        command: php artisan serve --host=0.0.0.0 --port=8000
+        ports:
+            - '127.0.0.1:${APP_PORT:-8000}:8000'
+        depends_on:
+            postgres:
+                condition: service_healthy
+        healthcheck:
+            test: ['CMD-SHELL', 'test -f storage/framework/.container-ready']
+            interval: 5s
+            timeout: 3s
+            retries: 60
+            start_period: 10s
+
+    vite:
+        <<: *app
+        container_name: med-share-vite
+        environment:
+            CONTAINER_ROLE: vite
+            VITE_IN_DOCKER: 'true'
+            VITE_PORT: ${VITE_PORT:-5173}
+        command: npm run dev
+        ports:
+            - '127.0.0.1:${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        depends_on:
+            - app
+
+    queue:
+        <<: *app
+        container_name: med-share-queue
+        environment:
+            CONTAINER_ROLE: queue
+        command: php artisan queue:listen --tries=1 --timeout=0
+        depends_on:
+            app:
+                condition: service_healthy
+
+    postgres:
+        image: postgres:17-alpine
+        container_name: med-share-postgres
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: med_share
+            POSTGRES_USER: med_share
+            POSTGRES_PASSWORD: med_share
+            TZ: UTC
+        ports:
+            - '127.0.0.1:${DB_FORWARD_PORT:-5432}:5432'
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U med_share -d med_share']
+            interval: 5s
+            timeout: 3s
+            retries: 10
+
+volumes:
+    postgres-data:

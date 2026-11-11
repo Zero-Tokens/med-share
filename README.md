@@ -61,7 +61,7 @@ Nada dos módulos de negócio da [seção 5](#5-módulos-de-negócio) foi implem
 
 | Tema | Documentação | Repositório hoje |
 | --- | --- | --- |
-| Banco | MySQL | SQLite no `.env.example` |
+| Banco | PostgreSQL | PostgreSQL 17 no `.env.example` e no `compose.yaml`; testes em SQLite em memória |
 | Fila e cache | Redis | Driver `database` no `.env.example` |
 | Interface do painel | A definir | Inertia e React, vindos do starter kit |
 | Autenticação do painel | A definir | Fortify, com sessão |
@@ -71,50 +71,64 @@ A interface e a autenticação continuam listadas como pendentes na [seção 19]
 
 ## Como rodar localmente
 
-### Pré-requisitos
+Todo o ambiente roda em containers. **Só o Docker (com Compose) precisa estar instalado**: PHP, Composer, Node e PostgreSQL vêm nas imagens.
 
-- PHP 8.3 ou superior, com a extensão `pdo_sqlite` para a configuração padrão e para os testes
-- Composer 2
-- Node.js 22, a versão usada na integração contínua
-
-Sem o `pdo_sqlite`, as migrations e os testes falham com `could not find driver`. No Ubuntu, a extensão vem no pacote `php8.3-sqlite3`.
-
-### Instalação
+### Primeira vez
 
 ```bash
 git clone https://github.com/Zero-Tokens/med-share.git
 cd med-share
-composer setup
+docker compose up -d --build
+docker compose exec app php artisan db:seed
 ```
 
-Em um clone novo, `composer setup` instala as dependências de PHP e Node, cria o `.env` a partir do `.env.example`, gera a chave da aplicação, roda as migrations e compila os assets.
+| Serviço | O que roda | Endereço |
+| --- | --- | --- |
+| `app` | Laravel (`php artisan serve`) | http://localhost:8000 |
+| `vite` | Vite com hot reload | http://localhost:5173 |
+| `queue` | Worker da fila (`queue:listen`) | — |
+| `postgres` | PostgreSQL 17 | `127.0.0.1:5432`, banco/usuário/senha `med_share` |
 
-### Execução
+Ao subir, o serviço `app` cria o `.env` a partir do `.env.example` (se não existir), roda o `composer install`, gera a `APP_KEY` e aplica as migrations. O serviço `vite` roda o `npm ci` quando o `node_modules` está ausente ou desatualizado.
+
+O `db:seed` cria o usuário de teste `igor@gmail.com`, senha `12345`. O seeder só roda nos ambientes `local` e `testing`.
+
+A imagem (`docker/app/Dockerfile`) usa o mesmo UID/GID do seu usuário, 1000 por padrão, então `vendor/`, `node_modules/` e os logs criados pelos containers continuam sendo seus. Se o seu UID for outro: `UID=$(id -u) GID=$(id -g) docker compose up -d --build`.
+
+### Dia a dia
 
 ```bash
-composer dev
+docker compose up -d          # sobe tudo
+docker compose logs -f app    # acompanha os logs (app, vite, queue, postgres)
+docker compose exec app bash  # terminal dentro do projeto
+docker compose down           # para tudo (o banco fica no volume)
+docker compose down -v        # para tudo e apaga o banco
 ```
 
-O comando executa `php artisan dev`, que inicia os processos de desenvolvimento. A aplicação fica em `http://localhost:8000`, conforme o `APP_URL` do `.env.example`.
+Para usar outras portas: `APP_PORT=8080 VITE_PORT=5174 DB_FORWARD_PORT=5433 docker compose up -d`.
 
-Com a configuração padrão, os e-mails vão para o log (`MAIL_MAILER=log`). O link de verificação de e-mail, exigido para acessar o dashboard, aparece em `storage/logs/laravel.log`.
+Com a configuração padrão, os e-mails vão para o log (`MAIL_MAILER=log`). O link de verificação de e-mail aparece em `storage/logs/laravel.log`.
 
-Para usar MySQL e Redis, veja a [seção 15.1](#151-configurar-mysql-e-redis).
+O `.env` aponta o banco para o host `postgres`, o nome do serviço na rede do Docker. Fora dos containers, por exemplo na integração contínua, use `DB_HOST=127.0.0.1`.
+
+Para usar Redis na fila e no cache, veja a [seção 15.1](#151-configurar-postgresql-e-redis).
 
 ## Comandos úteis
 
+Rodam dentro do container `app`, prefixados por `docker compose exec app`:
+
 | Comando | O que faz |
 | --- | --- |
-| `composer dev` | Inicia o ambiente de desenvolvimento |
-| `composer test` | Limpa a configuração em cache e roda Pint em modo de verificação, PHPStan e testes |
-| `composer ci:check` | Roda `vp check`, a checagem de tipos TypeScript e `composer test` |
-| `composer lint` | Formata o PHP com Pint |
-| `composer types:check` | Analisa o PHP com PHPStan |
-| `php artisan test` | Roda somente os testes |
-| `npm run build` | Compila os assets |
-| `npm run check` | Verifica o frontend com Vite+ |
-| `npm run check:fix` | Verifica o frontend e aplica as correções automáticas |
-| `npm run types:check` | Checa os tipos TypeScript |
+| `docker compose exec app php artisan test` | Roda os testes (SQLite em memória) |
+| `docker compose exec app composer test` | Limpa a configuração em cache e roda Pint em modo de verificação, PHPStan e testes |
+| `docker compose exec app composer ci:check` | Roda `vp check`, a checagem de tipos TypeScript e `composer test` |
+| `docker compose exec app composer lint` | Formata o PHP com Pint |
+| `docker compose exec app composer types:check` | Analisa o PHP com PHPStan |
+| `docker compose exec app php artisan migrate` | Aplica migrations novas |
+| `docker compose exec app php artisan db:seed` | Cria o usuário de teste |
+| `docker compose exec app npm run build` | Compila os assets |
+| `docker compose exec app npm run check:fix` | Verifica o frontend e aplica as correções automáticas |
+| `docker compose exec app npm run types:check` | Checa os tipos TypeScript |
 
 ---
 
@@ -212,7 +226,7 @@ As consultas do painel utilizam a base interna. A navegação do usuário não d
 | --- | --- |
 | Framework | Laravel 13.x, com dependências fixadas pelo `composer.lock` |
 | PHP | Versão compatível com Laravel 13, que exige no mínimo PHP 8.3 |
-| Banco | MySQL, com suporte a transações e índices adequados |
+| Banco | PostgreSQL 17, com suporte a transações e índices adequados |
 | Fila e cache | Redis como proposta para operação com vários workers |
 | Autorização | Policies do Laravel e vínculos de acesso por município e unidade |
 | API autenticada | Sanctum quando houver consumidores de API ou interface separada |
@@ -696,7 +710,7 @@ Reservas, prazo de confirmação da oferta e atualização do estoque também pr
 
 A aplicação já foi criada. Para instalar e executar, siga [Como rodar localmente](#como-rodar-localmente).
 
-### 15.1 Configurar MySQL e Redis
+### 15.1 Configurar PostgreSQL e Redis
 
 O ambiente proposto para o projeto substitui os drivers padrão do `.env.example`. Exemplo para desenvolvimento local:
 
@@ -706,12 +720,12 @@ APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://localhost:8000
 
-DB_CONNECTION=mysql
+DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
-DB_PORT=3306
+DB_PORT=5432
 DB_DATABASE=med_share
 DB_USERNAME=med_share
-DB_PASSWORD=defina_uma_senha_local
+DB_PASSWORD=med_share
 
 QUEUE_CONNECTION=redis
 CACHE_STORE=redis
@@ -721,7 +735,7 @@ REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
 ```
 
-Criar o banco e o usuário antes das migrations. Disponibilizar Redis e a extensão compatível com `REDIS_CLIENT`, ou escolher um cliente suportado e instalar sua dependência. Os hosts do exemplo precisam mudar quando a aplicação rodar em containers.
+O `compose.yaml` já cria o banco e o usuário. Com um PostgreSQL próprio, criá-los antes das migrations. Disponibilizar Redis e a extensão compatível com `REDIS_CLIENT`, ou escolher um cliente suportado e instalar sua dependência. Os hosts do exemplo precisam mudar quando a aplicação rodar em containers.
 
 Não recriar as migrations que já vieram na instalação. Manter o fuso da aplicação em UTC na configuração e nunca versionar o `.env` real.
 

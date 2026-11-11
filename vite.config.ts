@@ -7,6 +7,22 @@ import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
 
+// Dentro do container (compose.yaml, serviço `vite`) o servidor precisa ouvir
+// em todas as interfaces e anunciar `localhost` ao navegador, senão o
+// public/hot e o hot reload apontariam para um endereço interno do Docker.
+const inDocker = process.env.VITE_IN_DOCKER === 'true';
+const vitePort = Number(process.env.VITE_PORT ?? 5173);
+const dockerServer = inDocker
+    ? {
+          host: '0.0.0.0',
+          port: vitePort,
+          strictPort: true,
+          origin: `http://localhost:${vitePort}`,
+          cors: true,
+          hmr: { host: 'localhost', port: vitePort },
+      }
+    : {};
+
 export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
@@ -29,6 +45,7 @@ export default defineConfig({
         }),
     ]),
     server: {
+        ...dockerServer,
         watch: {
             ignored: [
                 '**/.agents/**',
