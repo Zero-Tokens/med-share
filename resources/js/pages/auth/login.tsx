@@ -1,117 +1,168 @@
 import { Form, Head } from '@inertiajs/react';
+import { Lock, Mail } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { register } from '@/routes';
+import { cn } from '@/lib/utils';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-import PasskeyVerify from '@/components/passkey-verify';
 
 type Props = {
     status?: string;
     canResetPassword: boolean;
 };
 
+const fieldLabel =
+    'text-xs font-semibold tracking-wider text-muted-foreground uppercase';
+
+const fieldInput =
+    'h-12 rounded-xl border-transparent bg-muted/70 pl-11 text-base shadow-none ring-1 ring-border transition-colors placeholder:text-muted-foreground/70 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-emerald-600/60 aria-invalid:ring-destructive/60 md:text-sm';
+
+const fieldIcon =
+    'pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground';
+
 export default function Login({ status, canResetPassword }: Props) {
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <>
-            <Head title="Log in" />
+            <Head title="Entrar" />
 
-            <PasskeyVerify />
+            {status && (
+                <div
+                    role="status"
+                    className="mb-5 rounded-xl bg-emerald-50 px-3 py-2 text-center text-sm font-medium text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-900"
+                >
+                    {status}
+                </div>
+            )}
 
+            {/*
+             * noValidate: as mensagens de campo obrigatório e de credenciais
+             * vêm do servidor, em português, em vez dos balões do navegador.
+             */}
             <Form
                 {...store.form()}
+                noValidate
                 resetOnSuccess={['password']}
-                className="flex flex-col gap-6"
+                className="grid gap-5"
             >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                        <div className="grid gap-2">
+                            <Label htmlFor="email" className={fieldLabel}>
+                                E-mail
+                            </Label>
+                            <div className="relative">
+                                <Mail className={fieldIcon} />
                                 <Input
                                     id="email"
                                     type="email"
                                     name="email"
                                     required
                                     autoFocus
-                                    tabIndex={1}
                                     autoComplete="email"
-                                    placeholder="email@example.com"
+                                    inputMode="email"
+                                    placeholder="nome@unidade.gov.br"
+                                    className={fieldInput}
+                                    aria-invalid={!!errors.email}
+                                    aria-describedby={
+                                        errors.email ? 'email-error' : undefined
+                                    }
                                 />
-                                <InputError message={errors.email} />
                             </div>
+                            <InputError
+                                id="email-error"
+                                role="alert"
+                                message={errors.email}
+                            />
+                        </div>
 
-                            <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
-                                    {canResetPassword && (
-                                        <TextLink
-                                            href={request()}
-                                            className="ml-auto text-sm"
-                                            tabIndex={5}
-                                        >
-                                            Forgot your password?
-                                        </TextLink>
-                                    )}
-                                </div>
-                                <PasswordInput
+                        <div className="grid gap-2">
+                            <Label htmlFor="password" className={fieldLabel}>
+                                Senha
+                            </Label>
+                            <div className="relative">
+                                <Lock className={fieldIcon} />
+                                <Input
                                     id="password"
                                     name="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     required
-                                    tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Password"
+                                    placeholder="Digite sua senha"
+                                    className={cn(fieldInput, 'pr-24')}
+                                    aria-invalid={!!errors.password}
+                                    aria-describedby={
+                                        errors.password
+                                            ? 'password-error'
+                                            : undefined
+                                    }
                                 />
-                                <InputError message={errors.password} />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    aria-pressed={showPassword}
+                                    aria-controls="password"
+                                    className="absolute inset-y-0 right-0 rounded-r-xl px-4 text-sm font-semibold text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-emerald-600/60 focus-visible:outline-none"
+                                >
+                                    {showPassword ? 'Ocultar' : 'Mostrar'}
+                                </button>
                             </div>
+                            <InputError
+                                id="password-error"
+                                role="alert"
+                                message={errors.password}
+                            />
+                        </div>
 
-                            <div className="flex items-center space-x-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
                                 <Checkbox
                                     id="remember"
                                     name="remember"
-                                    tabIndex={3}
+                                    className="size-5 rounded-md"
                                 />
-                                <Label htmlFor="remember">Remember me</Label>
+                                <Label
+                                    htmlFor="remember"
+                                    className="text-sm font-medium"
+                                >
+                                    Lembrar de mim
+                                </Label>
                             </div>
-
-                            <Button
-                                type="submit"
-                                className="mt-4 w-full"
-                                tabIndex={4}
-                                disabled={processing}
-                                data-test="login-button"
-                            >
-                                {processing && <Spinner />}
-                                Log in
-                            </Button>
+                            {canResetPassword && (
+                                <TextLink
+                                    href={request()}
+                                    className="text-sm font-semibold text-foreground no-underline hover:underline"
+                                >
+                                    Esqueci a senha
+                                </TextLink>
+                            )}
                         </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
-                            Don't have an account?{' '}
-                            <TextLink href={register()} tabIndex={5}>
-                                Sign up
-                            </TextLink>
-                        </div>
+                        <Button
+                            type="submit"
+                            disabled={processing}
+                            aria-busy={processing}
+                            data-test="login-button"
+                            className="mt-1 h-12 w-full rounded-xl bg-emerald-600 text-base font-semibold text-white shadow-[0_12px_32px_-10px_rgb(5_150_105/0.7)] hover:bg-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400"
+                        >
+                            {processing && <Spinner />}
+                            {processing ? 'Entrando...' : 'Entrar'}
+                        </Button>
                     </>
                 )}
             </Form>
-
-            {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
         </>
     );
 }
 
 Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
+    title: 'Bem-vindo de volta',
+    description: 'Entre com o e-mail e a senha da sua unidade de saúde.',
 };
