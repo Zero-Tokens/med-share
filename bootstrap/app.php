@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Em produção (Railway) o HTTPS termina no proxy da plataforma; sem
+        // confiar nele, o Laravel gera URLs http:// e o navegador bloqueia os assets.
+        $middleware->trustProxies(at: '*');
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
