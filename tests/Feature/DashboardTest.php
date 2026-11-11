@@ -16,6 +16,22 @@ class DashboardTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
+    public function test_guests_cannot_open_panel_pages()
+    {
+        foreach (['dashboard', 'profile.edit', 'security.edit', 'appearance.edit'] as $route) {
+            $this->get(route($route))->assertRedirect(route('login'));
+        }
+    }
+
+    public function test_unverified_users_are_sent_to_email_verification()
+    {
+        $user = User::factory()->unverified()->create();
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('verification.notice'));
+    }
+
     public function test_authenticated_users_can_visit_the_dashboard()
     {
         $user = User::factory()->create();
