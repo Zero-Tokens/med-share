@@ -38,12 +38,14 @@ class InitialSchemaTest extends TestCase
         }
         $this->assertTrue(Schema::hasColumn('users', 'is_platform_admin'));
 
-        Artisan::call('migrate:rollback', ['--step' => 5]);
+        // 10 passos: as 5 migrations da operação (parte 2) dependem destas.
+        Artisan::call('migrate:rollback', ['--step' => 10]);
 
         foreach (self::TABLES as $table) {
             $this->assertFalse(Schema::hasTable($table), "Tabela {$table} deveria ter sido removida.");
         }
         $this->assertFalse(Schema::hasColumn('users', 'is_platform_admin'));
+        $this->assertTrue(Schema::hasTable('users'), 'O rollback não pode passar das migrations do starter kit.');
 
         Artisan::call('migrate');
 
