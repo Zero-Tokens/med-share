@@ -45,11 +45,13 @@ class OperationalSchemaTest extends TestCase
             $this->assertTrue(Schema::hasTable($table), "Tabela {$table} deveria existir.");
         }
 
-        Artisan::call('migrate:rollback', ['--step' => 5]);
+        // 10 passos: as 5 migrations da importação (parte 3) dependem destas.
+        Artisan::call('migrate:rollback', ['--step' => 10]);
 
         foreach (self::TABLES as $table) {
             $this->assertFalse(Schema::hasTable($table), "Tabela {$table} deveria ter sido removida.");
         }
+        $this->assertFalse(Schema::hasTable('external_stock_positions'));
         $this->assertTrue(Schema::hasTable('medications'), 'O rollback não pode passar da parte 1.');
 
         Artisan::call('migrate');
