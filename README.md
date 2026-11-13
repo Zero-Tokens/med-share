@@ -46,7 +46,7 @@ Plataforma de redistribuição de medicamentos entre unidades de saúde. Reúne 
 | Rotas tipadas no frontend | Laravel Wayfinder |
 | Autenticação | Fortify com cadastro, redefinição de senha, verificação de e-mail, dois fatores e passkeys |
 | Telas | Boas-vindas, login e demais fluxos de autenticação, dashboard e configurações (perfil, segurança e aparência) |
-| Banco de dados | Migrations de usuários, cache, filas, passkeys e dois fatores |
+| Banco de dados | Migrations de usuários, cache, filas, passkeys e dois fatores; território, unidades, vínculos de acesso, catálogo de medicamentos, solicitações, ofertas, reservas, transferências, importação dos dados oficiais, qualidade dos dados, idempotência, outbox e auditoria (ver [`docs/banco-de-dados.md`](docs/banco-de-dados.md)) |
 | Testes | PHPUnit, com testes de autenticação, dashboard e configurações |
 | Qualidade | Pint, PHPStan (Larastan) e Vite+ (`vp check`) |
 | Integração contínua | GitHub Actions em [`.github/workflows/tests.yml`](.github/workflows/tests.yml), com PHP 8.3 e Node 22 |
@@ -55,7 +55,7 @@ Esse conjunto vem do starter kit de React do Laravel. O `composer.json` ainda se
 
 ### O que ainda não existe
 
-Nada dos módulos de negócio da [seção 5](#5-módulos-de-negócio) foi implementado: integração com o BNAFAR, estoque, solicitações, ofertas, reservas e transferências. Também não existem `routes/api.php`, a API interna da [seção 13](#13-api-interna-proposta) e a pasta `docs/`.
+Nada dos módulos de negócio da [seção 5](#5-módulos-de-negócio) foi implementado: integração com o BNAFAR, estoque, solicitações, ofertas, reservas e transferências. Também não existem `routes/api.php` e a API interna da [seção 13](#13-api-interna-proposta). A pasta `docs/` tem só a modelagem do banco.
 
 ### Diferenças entre o planejado e o repositório
 
